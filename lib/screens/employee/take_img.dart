@@ -8,7 +8,6 @@ import 'package:expense_manager/screens/employee/upload_details.dart';
 import 'package:expense_manager/theme/app_theme.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:file_picker/file_picker.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:http/http.dart' as http;
 
 class TakeImagePage extends StatefulWidget {
@@ -33,8 +32,8 @@ class _TakeImagePageState extends State<TakeImagePage> {
 
   Future<Map<String, String?>> _performServerOcr(
       List<int> imageBytes) async {
-    final supabaseUrl = dotenv.env['SUPABASE_URL']!;
-    final supabaseKey = dotenv.env['SUPABASE_ANON_KEY']!;
+    const supabaseUrl = String.fromEnvironment('SUPABASE_URL');
+    const supabaseKey = String.fromEnvironment('SUPABASE_ANON_KEY');
     final base64Image = base64Encode(imageBytes);
 
     try {

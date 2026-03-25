@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:http/http.dart' as http;
 import 'package:fl_chart/fl_chart.dart';
@@ -209,8 +208,8 @@ class _AdminDashboardState extends State<AdminDashboard> {
               .eq('id', billId)
               .single();
 
-          final supabaseUrl = dotenv.env['SUPABASE_URL']!;
-          final supabaseKey = dotenv.env['SUPABASE_ANON_KEY']!;
+          const supabaseUrl = String.fromEnvironment('SUPABASE_URL');
+          const supabaseKey = String.fromEnvironment('SUPABASE_ANON_KEY');
 
           final emailResponse = await http.post(
             Uri.parse('$supabaseUrl/functions/v1/send-approval-email'),
