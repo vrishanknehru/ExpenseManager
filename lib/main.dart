@@ -17,14 +17,25 @@ Future<void> main() async {
     DeviceOrientation.portraitUp,
   ]);
 
+  // Load .env file (works on mobile)
   await dotenv.load();
 
   await Hive.initFlutter();
   await Hive.openBox('userBox');
 
+  // Get Supabase credentials
+  // On web: passed via --dart-define during build
+  // On mobile: loaded from .env file
+  final supabaseUrl = String.fromEnvironment('SUPABASE_URL', defaultValue: dotenv.env['SUPABASE_URL'] ?? '');
+  final supabaseAnonKey = String.fromEnvironment('SUPABASE_ANON_KEY', defaultValue: dotenv.env['SUPABASE_ANON_KEY'] ?? '');
+
+  if (supabaseUrl.isEmpty || supabaseAnonKey.isEmpty) {
+    throw Exception('Missing Supabase credentials');
+  }
+
   await Supabase.initialize(
-    url: dotenv.env['SUPABASE_URL']!,
-    anonKey: dotenv.env['SUPABASE_ANON_KEY']!,
+    url: supabaseUrl,
+    anonKey: supabaseAnonKey,
   );
 
   GoogleFonts.config.allowRuntimeFetching = true;
