@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'package:flutter_application_1/theme/app_theme.dart';
+import 'package:expense_manager/theme/app_theme.dart';
 import 'employee/employee_home.dart';
 import 'admin/admin_dashboard.dart';
 

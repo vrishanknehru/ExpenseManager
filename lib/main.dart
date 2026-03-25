@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_application_1/screens/login_page.dart';
-import 'package:flutter_application_1/screens/employee/employee_home.dart';
-import 'package:flutter_application_1/screens/admin/admin_dashboard.dart';
-import 'package:flutter_application_1/theme/app_theme.dart';
+import 'package:expense_manager/screens/login_page.dart';
+import 'package:expense_manager/screens/employee/employee_home.dart';
+import 'package:expense_manager/screens/admin/admin_dashboard.dart';
+import 'package:expense_manager/theme/app_theme.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';

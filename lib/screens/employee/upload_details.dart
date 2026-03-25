@@ -2,13 +2,13 @@ import 'dart:io';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:flutter_application_1/screens/employee/local_image_viewer.dart';
-import 'package:flutter_application_1/screens/employee/local_pdf_viewer.dart';
-import 'package:flutter_application_1/theme/app_theme.dart';
+import 'package:expense_manager/screens/employee/local_image_viewer.dart';
+import 'package:expense_manager/screens/employee/local_pdf_viewer.dart';
+import 'package:expense_manager/theme/app_theme.dart';
 import 'package:intl/intl.dart';
 import 'package:flutter/services.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'package:flutter_application_1/screens/employee/employee_home.dart';
+import 'package:expense_manager/screens/employee/employee_home.dart';
 import 'package:flutter_pdfview/flutter_pdfview.dart';
 import 'package:path_provider/path_provider.dart';
 

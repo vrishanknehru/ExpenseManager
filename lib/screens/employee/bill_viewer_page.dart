@@ -8,8 +8,8 @@ import 'package:path_provider/path_provider.dart';
 import 'package:http/http.dart' as http;
 import 'package:intl/intl.dart';
 import 'package:url_launcher/url_launcher.dart';
-import 'package:flutter_application_1/screens/employee/network_pdf_viewer_page.dart';
-import 'package:flutter_application_1/theme/app_theme.dart';
+import 'package:expense_manager/screens/employee/network_pdf_viewer_page.dart';
+import 'package:expense_manager/theme/app_theme.dart';
 
 class BillViewerPage extends StatefulWidget {
   final Map<String, dynamic> billData;

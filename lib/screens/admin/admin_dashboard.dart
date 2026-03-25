@@ -7,9 +7,9 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:http/http.dart' as http;
 import 'package:fl_chart/fl_chart.dart';
-import 'package:flutter_application_1/screens/login_page.dart';
-import 'package:flutter_application_1/screens/employee/bill_viewer_page.dart';
-import 'package:flutter_application_1/theme/app_theme.dart';
+import 'package:expense_manager/screens/login_page.dart';
+import 'package:expense_manager/screens/employee/bill_viewer_page.dart';
+import 'package:expense_manager/theme/app_theme.dart';
 import 'package:intl/intl.dart';
 
 class AdminDashboard extends StatefulWidget {
