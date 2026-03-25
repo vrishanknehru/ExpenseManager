@@ -17,30 +17,7 @@ Future<void> main() async {
     DeviceOrientation.portraitUp,
   ]);
 
-  try {
-    await dotenv.load();
-  } catch (e) {
-    // Expected on web - browser can't read filesystem
-  }
-
-  await Hive.initFlutter();
-  await Hive.openBox('userBox');
-
-  // Try to initialize Supabase
-  // On web, env vars come from the build environment
-  // On mobile, they come from .env file
-  try {
-    final url = String.fromEnvironment('SUPABASE_URL');
-    final key = String.fromEnvironment('SUPABASE_ANON_KEY');
-
-    if (url.isNotEmpty && key.isNotEmpty) {
-      await Supabase.initialize(url: url, anonKey: key);
-    }
-  } catch (e) {
-    // Supabase init failed - app will load but won't work
-    // This allows us to see the error in console
-  }
-
+  // Skip Hive and Supabase for now - test basic app load
   GoogleFonts.config.allowRuntimeFetching = true;
   runApp(const MyApp());
 }
