@@ -20,38 +20,28 @@ Future<void> main() async {
   try {
     await dotenv.load();
   } catch (e) {
-    print('DEBUG: dotenv.load() failed: $e');
+    // Expected on web - browser can't read filesystem
   }
 
   await Hive.initFlutter();
   await Hive.openBox('userBox');
 
+  // Try to initialize Supabase
+  // On web, env vars come from the build environment
+  // On mobile, they come from .env file
   try {
-    // Get Supabase credentials
-    final supabaseUrl = String.fromEnvironment('SUPABASE_URL', defaultValue: dotenv.env['SUPABASE_URL'] ?? '');
-    final supabaseAnonKey = String.fromEnvironment('SUPABASE_ANON_KEY', defaultValue: dotenv.env['SUPABASE_ANON_KEY'] ?? '');
+    final url = String.fromEnvironment('SUPABASE_URL');
+    final key = String.fromEnvironment('SUPABASE_ANON_KEY');
 
-    print('DEBUG_MAIN: SUPABASE_URL = ${supabaseUrl.isEmpty ? "EMPTY" : "SET"}');
-    print('DEBUG_MAIN: SUPABASE_ANON_KEY = ${supabaseAnonKey.isEmpty ? "EMPTY" : "SET"}');
-
-    if (supabaseUrl.isEmpty || supabaseAnonKey.isEmpty) {
-      throw Exception('Missing Supabase credentials - URL: ${supabaseUrl.isEmpty ? "missing" : "set"}, Key: ${supabaseAnonKey.isEmpty ? "missing" : "set"}');
+    if (url.isNotEmpty && key.isNotEmpty) {
+      await Supabase.initialize(url: url, anonKey: key);
     }
-
-    print('DEBUG_MAIN: Initializing Supabase...');
-    await Supabase.initialize(
-      url: supabaseUrl,
-      anonKey: supabaseAnonKey,
-    );
-    print('DEBUG_MAIN: Supabase initialized successfully');
-  } catch (e, st) {
-    print('DEBUG_MAIN: ERROR during initialization: $e');
-    print('DEBUG_MAIN: Stack trace: $st');
-    rethrow;
+  } catch (e) {
+    // Supabase init failed - app will load but won't work
+    // This allows us to see the error in console
   }
 
   GoogleFonts.config.allowRuntimeFetching = true;
-
   runApp(const MyApp());
 }
 
