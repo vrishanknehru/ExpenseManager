@@ -11,15 +11,67 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
 
 Future<void> main() async {
-  WidgetsFlutterBinding.ensureInitialized();
+  print('===== MAIN START =====');
 
-  await SystemChrome.setPreferredOrientations([
-    DeviceOrientation.portraitUp,
-  ]);
+  try {
+    print('MAIN: Initializing Flutter widgets...');
+    WidgetsFlutterBinding.ensureInitialized();
+    print('MAIN: Flutter initialized ✓');
 
-  // Skip Hive and Supabase for now - test basic app load
-  GoogleFonts.config.allowRuntimeFetching = true;
-  runApp(const MyApp());
+    print('MAIN: Setting screen orientation...');
+    await SystemChrome.setPreferredOrientations([
+      DeviceOrientation.portraitUp,
+    ]);
+    print('MAIN: Screen orientation set ✓');
+
+    print('MAIN: Loading .env file...');
+    try {
+      await dotenv.load();
+      print('MAIN: .env loaded ✓');
+    } catch (e) {
+      print('MAIN: .env load failed (expected on web): $e');
+    }
+
+    print('MAIN: Initializing Hive...');
+    await Hive.initFlutter();
+    print('MAIN: Hive init ✓');
+
+    print('MAIN: Opening userBox...');
+    await Hive.openBox('userBox');
+    print('MAIN: userBox opened ✓');
+
+    print('MAIN: Reading Supabase credentials...');
+    final supabaseUrl = String.fromEnvironment('SUPABASE_URL', defaultValue: dotenv.env['SUPABASE_URL'] ?? '');
+    final supabaseKey = String.fromEnvironment('SUPABASE_ANON_KEY', defaultValue: dotenv.env['SUPABASE_ANON_KEY'] ?? '');
+
+    print('MAIN: SUPABASE_URL present: ${supabaseUrl.isNotEmpty}');
+    print('MAIN: SUPABASE_ANON_KEY present: ${supabaseKey.isNotEmpty}');
+
+    if (supabaseUrl.isNotEmpty && supabaseKey.isNotEmpty) {
+      print('MAIN: Initializing Supabase...');
+      await Supabase.initialize(
+        url: supabaseUrl,
+        anonKey: supabaseKey,
+      );
+      print('MAIN: Supabase initialized ✓');
+    } else {
+      print('MAIN: WARNING - Supabase credentials missing, skipping init');
+    }
+
+    print('MAIN: Setting up GoogleFonts...');
+    GoogleFonts.config.allowRuntimeFetching = true;
+    print('MAIN: GoogleFonts configured ✓');
+
+    print('MAIN: Running app...');
+    runApp(const MyApp());
+    print('MAIN: App running ✓');
+  } catch (e, st) {
+    print('===== MAIN ERROR =====');
+    print('ERROR: $e');
+    print('STACK: $st');
+    print('===== MAIN ERROR END =====');
+    rethrow;
+  }
 }
 
 class MyApp extends StatelessWidget {
@@ -49,12 +101,14 @@ class _AuthGateState extends State<AuthGate> {
 
   @override
   void initState() {
+    print('AUTHGATE: initState called');
     super.initState();
     _checkAuth();
     _listenConnectivity();
   }
 
   void _listenConnectivity() {
+    print('AUTHGATE: Setting up connectivity listener...');
     Connectivity().onConnectivityChanged.listen((results) {
       final offline = results.every((r) => r == ConnectivityResult.none);
       if (mounted && offline != _isOffline) {
@@ -64,75 +118,101 @@ class _AuthGateState extends State<AuthGate> {
   }
 
   Future<void> _checkAuth() async {
-    final session = Supabase.instance.client.auth.currentSession;
-    final box = Hive.box('userBox');
+    print('AUTHGATE: Checking authentication...');
+    try {
+      print('AUTHGATE: Getting Supabase session...');
+      final session = Supabase.instance.client.auth.currentSession;
+      print('AUTHGATE: Session obtained: ${session != null}');
 
-    if (session != null) {
-      // Active auth session — use cached profile data
-      final savedUserId = box.get('userId') as String?;
-      final savedEmail = box.get('email') as String?;
-      final savedRole = box.get('role') as String?;
-      final savedUsername = box.get('username') as String?;
+      print('AUTHGATE: Getting Hive box...');
+      final box = Hive.box('userBox');
+      print('AUTHGATE: Hive box obtained ✓');
 
-      if (savedUserId != null && savedEmail != null && savedRole != null) {
-        if (savedRole == 'admin') {
-          _home = AdminDashboard(
-              userId: savedUserId,
-              email: savedEmail,
-              username: savedUsername);
+      if (session != null) {
+        print('AUTHGATE: User logged in');
+        // Active auth session — use cached profile data
+        final savedUserId = box.get('userId') as String?;
+        final savedEmail = box.get('email') as String?;
+        final savedRole = box.get('role') as String?;
+        final savedUsername = box.get('username') as String?;
+
+        if (savedUserId != null && savedEmail != null && savedRole != null) {
+          print('AUTHGATE: Using cached profile: $savedRole');
+          if (savedRole == 'admin') {
+            _home = AdminDashboard(
+                userId: savedUserId,
+                email: savedEmail,
+                username: savedUsername);
+          } else {
+            _home = EmployeeHome(
+                userId: savedUserId,
+                email: savedEmail,
+                username: savedUsername);
+          }
         } else {
-          _home = EmployeeHome(
-              userId: savedUserId,
-              email: savedEmail,
-              username: savedUsername);
+          print('AUTHGATE: No cached profile, fetching from server...');
+          // Auth session exists but no cached profile — re-fetch
+          try {
+            final email = session.user.email!;
+            final profile = await Supabase.instance.client
+                .from('users')
+                .select('id, role, username')
+                .eq('email', email)
+                .maybeSingle();
+
+            if (profile != null) {
+              final userId = profile['id'] as String;
+              final role = profile['role']?.toString().toLowerCase();
+              final username = profile['username'] as String?;
+
+              await box.put('userId', userId);
+              await box.put('email', email);
+              await box.put('role', role);
+              await box.put('username', username);
+
+              print('AUTHGATE: Profile cached: $role');
+              if (role == 'admin') {
+                _home = AdminDashboard(
+                    userId: userId, email: email, username: username);
+              } else {
+                _home = EmployeeHome(
+                    userId: userId, email: email, username: username);
+              }
+            }
+          } catch (e) {
+            print('AUTHGATE: Failed to fetch profile: $e');
+          }
         }
       } else {
-        // Auth session exists but no cached profile — re-fetch
-        try {
-          final email = session.user.email!;
-          final profile = await Supabase.instance.client
-              .from('users')
-              .select('id, role, username')
-              .eq('email', email)
-              .maybeSingle();
-
-          if (profile != null) {
-            final userId = profile['id'] as String;
-            final role = profile['role']?.toString().toLowerCase();
-            final username = profile['username'] as String?;
-
-            await box.put('userId', userId);
-            await box.put('email', email);
-            await box.put('role', role);
-            await box.put('username', username);
-
-            if (role == 'admin') {
-              _home = AdminDashboard(
-                  userId: userId, email: email, username: username);
-            } else {
-              _home = EmployeeHome(
-                  userId: userId, email: email, username: username);
-            }
-          }
-        } catch (e) {
-          print('AUTH_GATE: Failed to fetch profile: $e');
-        }
+        print('AUTHGATE: No session - clearing cache and showing login');
+        // No auth session — clear stale Hive data
+        await box.clear();
       }
-    } else {
-      // No auth session — clear stale Hive data
-      await box.clear();
-    }
 
-    if (mounted) {
-      setState(() {
-        _home ??= const LoginScreen();
-        _isLoading = false;
-      });
+      if (mounted) {
+        setState(() {
+          _home ??= const LoginScreen();
+          _isLoading = false;
+        });
+        print('AUTHGATE: UI updated ✓');
+      }
+    } catch (e, st) {
+      print('AUTHGATE: ERROR in _checkAuth');
+      print('ERROR: $e');
+      print('STACK: $st');
+      if (mounted) {
+        setState(() {
+          _home = const LoginScreen();
+          _isLoading = false;
+        });
+      }
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    print('AUTHGATE: build() - isLoading: $_isLoading');
+
     if (_isLoading) {
       return const Scaffold(
         body: Center(child: CircularProgressIndicator()),
@@ -148,21 +228,13 @@ class _AuthGateState extends State<AuthGate> {
             left: 0,
             right: 0,
             child: Material(
+              color: Colors.red,
               child: Container(
-                color: AppColors.rejected,
-                padding: EdgeInsets.only(
-                  top: MediaQuery.of(context).padding.top + 4,
-                  bottom: 8,
-                ),
-                child: Center(
-                  child: Text(
-                    'You are offline',
-                    style: GoogleFonts.plusJakartaSans(
-                      color: Colors.white,
-                      fontSize: 13,
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
+                padding: const EdgeInsets.symmetric(vertical: 8),
+                child: const Text(
+                  '⚠️ Offline',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(color: Colors.white),
                 ),
               ),
             ),
