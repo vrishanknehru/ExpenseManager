@@ -41,8 +41,10 @@ Future<void> main() async {
     print('MAIN: userBox opened ✓');
 
     print('MAIN: Reading Supabase credentials...');
-    final supabaseUrl = String.fromEnvironment('SUPABASE_URL', defaultValue: dotenv.env['SUPABASE_URL'] ?? '');
-    final supabaseKey = String.fromEnvironment('SUPABASE_ANON_KEY', defaultValue: dotenv.env['SUPABASE_ANON_KEY'] ?? '');
+    const compiledUrl = String.fromEnvironment('SUPABASE_URL');
+    const compiledKey = String.fromEnvironment('SUPABASE_ANON_KEY');
+    final supabaseUrl = compiledUrl.isNotEmpty ? compiledUrl : (dotenv.env['SUPABASE_URL'] ?? '');
+    final supabaseKey = compiledKey.isNotEmpty ? compiledKey : (dotenv.env['SUPABASE_ANON_KEY'] ?? '');
 
     print('MAIN: SUPABASE_URL present: ${supabaseUrl.isNotEmpty}');
     print('MAIN: SUPABASE_ANON_KEY present: ${supabaseKey.isNotEmpty}');
