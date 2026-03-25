@@ -17,26 +17,38 @@ Future<void> main() async {
     DeviceOrientation.portraitUp,
   ]);
 
-  // Load .env file (works on mobile)
-  await dotenv.load();
+  try {
+    await dotenv.load();
+  } catch (e) {
+    print('DEBUG: dotenv.load() failed: $e');
+  }
 
   await Hive.initFlutter();
   await Hive.openBox('userBox');
 
-  // Get Supabase credentials
-  // On web: passed via --dart-define during build
-  // On mobile: loaded from .env file
-  final supabaseUrl = String.fromEnvironment('SUPABASE_URL', defaultValue: dotenv.env['SUPABASE_URL'] ?? '');
-  final supabaseAnonKey = String.fromEnvironment('SUPABASE_ANON_KEY', defaultValue: dotenv.env['SUPABASE_ANON_KEY'] ?? '');
+  try {
+    // Get Supabase credentials
+    final supabaseUrl = String.fromEnvironment('SUPABASE_URL', defaultValue: dotenv.env['SUPABASE_URL'] ?? '');
+    final supabaseAnonKey = String.fromEnvironment('SUPABASE_ANON_KEY', defaultValue: dotenv.env['SUPABASE_ANON_KEY'] ?? '');
 
-  if (supabaseUrl.isEmpty || supabaseAnonKey.isEmpty) {
-    throw Exception('Missing Supabase credentials');
+    print('DEBUG_MAIN: SUPABASE_URL = ${supabaseUrl.isEmpty ? "EMPTY" : "SET"}');
+    print('DEBUG_MAIN: SUPABASE_ANON_KEY = ${supabaseAnonKey.isEmpty ? "EMPTY" : "SET"}');
+
+    if (supabaseUrl.isEmpty || supabaseAnonKey.isEmpty) {
+      throw Exception('Missing Supabase credentials - URL: ${supabaseUrl.isEmpty ? "missing" : "set"}, Key: ${supabaseAnonKey.isEmpty ? "missing" : "set"}');
+    }
+
+    print('DEBUG_MAIN: Initializing Supabase...');
+    await Supabase.initialize(
+      url: supabaseUrl,
+      anonKey: supabaseAnonKey,
+    );
+    print('DEBUG_MAIN: Supabase initialized successfully');
+  } catch (e, st) {
+    print('DEBUG_MAIN: ERROR during initialization: $e');
+    print('DEBUG_MAIN: Stack trace: $st');
+    rethrow;
   }
-
-  await Supabase.initialize(
-    url: supabaseUrl,
-    anonKey: supabaseAnonKey,
-  );
 
   GoogleFonts.config.allowRuntimeFetching = true;
 
