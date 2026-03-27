@@ -23,8 +23,7 @@ Employees submit bills with photos or PDFs, OCR automatically extracts invoice d
 
 **Automated Workflows**
 - Server-side OCR via Supabase Edge Function (works on all platforms including web)
-- Approval email notification to employee via Resend
-- ERP email with PDF attachment on approval
+- ERP email with PDF attachment on approval via Resend
 - Database webhook triggers for automated processing
 
 ---
@@ -141,7 +140,7 @@ cd build/web
 vercel --prod
 ```
 
-Employees can access the app via the Vercel URL and "Add to Home Screen" for a native app-like experience.
+Live at [expensemanager-vn.vercel.app](https://expensemanager-vn.vercel.app). Employees can "Add to Home Screen" from Safari for a native app-like experience.
 
 ---
 
@@ -163,7 +162,7 @@ lib/
 
 supabase/functions/
 ├── ocr-extract/index.ts               # Google Vision API OCR
-└── send-approval-email/index.ts       # Email notifications via Resend
+└── send-approval-email/index.ts       # ERP email with PDF via Resend
 ```
 
 ---
@@ -183,12 +182,7 @@ Bill record inserted (status: pending)
         ↓
 Admin reviews → Approve or Reject (with remarks)
         ↓
-On approval: email to employee + ERP email with PDF
+On approval: ERP email sent with PDF attachment
 On rejection: reason visible to employee on dashboard
 ```
 
----
-
-## License
-
-Private — internal company use only.
